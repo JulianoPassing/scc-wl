@@ -24,7 +24,7 @@ RESPOSTAS_CORRETAS = {
     9: 'b',  # Powergaming
     10: 'a', # Amor à Vida
     11: 'c', # Assalto
-    12: 'b'  # Microfone
+    12: 'a'  # Microfone
 }
 
 # Inicializar banco de dados
@@ -210,7 +210,7 @@ class QuestaoView(discord.ui.View):
             8: {
                 "titulo": "O que é Safe Zone (Área Segura)?",
                 "a": "Locais onde crimes são proibidos",
-                "b": "Local para esconder itens ilegais",
+                "b": "Locais seguros",
                 "c": "Área só para administradores"
             },
             9: {
