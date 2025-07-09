@@ -10,6 +10,7 @@ Bot para sistema de whitelist automático para servidor de GTA RP do Street Car 
 - **Atribuição automática de cargo**: Usuários aprovados recebem cargo automaticamente
 - **Painel interativo**: Interface moderna com botões e modais
 - **Banco de dados**: Armazena histórico de tentativas e status dos usuários
+- **📋 Armazenamento de formulários**: Todos os formulários são salvos automaticamente em um canal específico
 
 ## 📋 Estrutura do Formulário
 
@@ -61,6 +62,7 @@ pip install -r requirements.txt
    ```python
    BOT_TOKEN = 'SEU_TOKEN_AQUI'  # Substitua pelo token do seu bot
    CARGO_APROVADO = 1263487190575349892  # ID do cargo para aprovados
+   CANAL_FORMULARIOS = 1392299124371751075  # ID do canal para salvar formulários
    ```
 
 4. **Encontre o ID do cargo**:
@@ -99,6 +101,41 @@ O bot usa SQLite para armazenar:
 - **last_attempt**: Data da última tentativa
 - **aprovado**: Status de aprovação (0 ou 1)
 
+## 📋 Armazenamento de Formulários
+
+### 🔧 Configuração
+- **Canal configurado:** `1392299124371751075`
+- **Variável:** `CANAL_FORMULARIOS` no arquivo `config.py`
+
+### 📊 Informações Salvas
+Quando alguém responde o formulário, o bot envia automaticamente um embed no canal com:
+
+**👤 Dados do Usuário:**
+- Nome Discord e ID
+- Tag completa
+
+**📝 Informações Pessoais:**
+- Nome completo informado
+- Como conheceu o servidor
+
+**💭 Respostas Completas:**
+- Motivação para jogar no servidor
+- História do personagem (limitado a 500 caracteres por campo)
+
+**📊 Questões Obrigatórias:**
+- Todas as 8 respostas com status visual (✅/❌)
+- Comparação com respostas corretas
+
+**🎯 Resultado Final:**
+- Status: Aprovado/Reprovado
+- Número de acertos das questões obrigatórias
+
+### 🎨 Visual dos Embeds
+- **🟢 Verde:** Usuário aprovado
+- **🔴 Vermelho:** Usuário reprovado
+- **🕐 Timestamp:** Data e hora da resposta
+- **🖼️ Avatar:** Foto do usuário como thumbnail
+
 ## 🔧 Personalização
 
 ### Alterar Questões
@@ -132,6 +169,19 @@ Altere as cores e mensagens no arquivo `config.py`:
 EMBED_COLOR_SUCCESS = 0x00ff00  # Verde
 EMBED_COLOR_ERROR = 0xff0000    # Vermelho
 ```
+
+### Alterar Canal de Armazenamento
+Para alterar o canal onde os formulários são salvos:
+
+1. **Obtenha o ID do canal:**
+   - Ative o modo desenvolvedor no Discord
+   - Clique com botão direito no canal desejado
+   - Copie o ID
+
+2. **Edite o arquivo `config.py`:**
+   ```python
+   CANAL_FORMULARIOS = 1392299124371751075  # Substitua pelo ID do seu canal
+   ```
 
 ## 🛡️ Segurança
 

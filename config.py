@@ -1,10 +1,14 @@
 # Configurações do Bot Discord - Street Car Club Whitelist
 
-# Token do bot (substitua pelo seu token)
+# Token do bot (substitua pelo seu token real)
+# IMPORTANTE: Substitua 'SEU_TOKEN_AQUI' pelo token real do seu bot Discord
 BOT_TOKEN = 'SEU_TOKEN_AQUI'
 
 # ID do cargo que será dado aos aprovados
 CARGO_APROVADO = 1263487190575349892
+
+# ID do canal para armazenar formulários respondidos
+CANAL_FORMULARIOS = 1392299124371751075
 
 # Configurações do sistema de whitelist
 TENTATIVAS_MAXIMAS = 2  # Máximo de tentativas permitidas

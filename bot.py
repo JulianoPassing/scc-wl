@@ -4,6 +4,7 @@ import sqlite3
 import asyncio
 from datetime import datetime, timedelta
 import json
+from config import BOT_TOKEN, CANAL_FORMULARIOS
 
 # Configurações do bot
 intents = discord.Intents.default()
@@ -283,6 +284,9 @@ class QuestaoView(discord.ui.View):
         # Atualizar tentativas
         atualizar_tentativas(interaction.user.id, aprovado)
         
+        # Enviar formulário para o canal de armazenamento
+        await self.enviar_formulario_para_canal(interaction, aprovado, corretas)
+        
         if aprovado:
             # Dar cargo
             try:
@@ -314,6 +318,83 @@ class QuestaoView(discord.ui.View):
             )
         
         await interaction.response.edit_message(embed=embed, view=None)
+    
+    async def enviar_formulario_para_canal(self, interaction, aprovado, corretas):
+        try:
+            # Obter o canal de armazenamento
+            canal = interaction.guild.get_channel(CANAL_FORMULARIOS)
+            if not canal:
+                print(f"Canal de formulários não encontrado: {CANAL_FORMULARIOS}")
+                return
+            
+            # Mapear respostas da questão 3 (como conheceu)
+            conheceu_map = {
+                'a': 'Google',
+                'b': 'YouTube', 
+                'c': 'Amigos',
+                'd': 'Outros'
+            }
+            
+            # Criar embed com informações do formulário
+            embed = discord.Embed(
+                title="📋 Formulário de Whitelist Respondido",
+                color=0x00ff00 if aprovado else 0xff0000,
+                timestamp=datetime.now()
+            )
+            
+            embed.add_field(
+                name="👤 Usuário",
+                value=f"{interaction.user.mention}\n**ID:** {interaction.user.id}\n**Tag:** {interaction.user}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="📝 Informações Pessoais",
+                value=f"**Nome:** {self.nome}\n**Conheceu por:** {conheceu_map.get(self.conheceu, 'Não informado')}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="💭 Motivação",
+                value=self.motivo[:500] + ("..." if len(self.motivo) > 500 else ""),
+                inline=False
+            )
+            
+            embed.add_field(
+                name="📖 História do Personagem",
+                value=self.historia[:500] + ("..." if len(self.historia) > 500 else ""),
+                inline=False
+            )
+            
+            # Mostrar respostas das questões obrigatórias
+            questoes_texto = ""
+            for q in range(5, 13):
+                resposta = self.respostas.get(q, 'Não respondida')
+                correta = RESPOSTAS_CORRETAS[q]
+                status = "✅" if resposta == correta else "❌"
+                questoes_texto += f"**Q{q}:** {resposta.upper()} {status}\n"
+            
+            embed.add_field(
+                name="📊 Questões Obrigatórias (5-12)",
+                value=questoes_texto,
+                inline=False
+            )
+            
+            # Status final
+            status_final = "✅ APROVADO" if aprovado else "❌ REPROVADO"
+            embed.add_field(
+                name="🎯 Resultado Final",
+                value=f"{status_final}\n**Acertos:** {corretas}/8",
+                inline=False
+            )
+            
+            embed.set_thumbnail(url=interaction.user.display_avatar.url)
+            embed.set_footer(text="Street Car Club • Sistema de Whitelist")
+            
+            await canal.send(embed=embed)
+            
+        except Exception as e:
+            print(f"Erro ao enviar formulário para canal: {e}")
 
 class WhitelistView(discord.ui.View):
     def __init__(self):
@@ -471,5 +552,5 @@ async def reset_wl(interaction: discord.Interaction, usuario: discord.Member):
     
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-# Token do bot - SUBSTITUA PELO SEU TOKEN
-bot.run('SEU_TOKEN_AQUI') 
+# Token do bot importado do config.py
+bot.run(BOT_TOKEN) 
