@@ -4,6 +4,7 @@ import sqlite3
 import asyncio
 from datetime import datetime, timedelta
 import json
+import random
 from config import BOT_TOKEN, CANAL_FORMULARIOS
 
 # Configurações do bot
@@ -169,21 +170,45 @@ class HistoriaModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message("Iniciando questões obrigatórias...", ephemeral=True)
         
-        view = QuestaoView(self.nome, self.motivo, self.conheceu, self.historia.value, 5, {})
+        # Criar ordem aleatória das questões
+        questoes_ordem = list(range(5, 13))  # Questões 5 a 12
+        random.shuffle(questoes_ordem)
+        
+        # Iniciar com a primeira questão da ordem aleatória
+        primeira_questao = questoes_ordem[0]
+        view = QuestaoView(self.nome, self.motivo, self.conheceu, self.historia.value, questoes_ordem, 0, {})
+        
+        # Obter título da primeira questão
+        questoes_titulos = {
+            5: "O que é Random Deathmatch (RDM)?",
+            6: "O que é VDM ou Vehicle Deathmatch?",
+            7: "O que é Dark RP?",
+            8: "O que é Safe Zone (Área Segura)?",
+            9: "O que é Powergaming?",
+            10: "O que é Amor à Vida?",
+            11: "Em qual situação você assaltaria uma pessoa?",
+            12: "Você tem MICROFONE?"
+        }
+        
         embed = discord.Embed(
-            title="Questão 5/12 - OBRIGATÓRIA",
-            description="O que é Random Deathmatch (RDM)?",
+            title=f"Questão 1/8 - OBRIGATÓRIA",
+            description=questoes_titulos[primeira_questao],
             color=0xff0000
         )
         await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
 class QuestaoView(discord.ui.View):
-    def __init__(self, nome, motivo, conheceu, historia, questao_atual, respostas):
+    """
+    Sistema de questões com ordem aleatória para evitar cópia.
+    As questões são embaralhadas no início e apresentadas uma por vez.
+    """
+    def __init__(self, nome, motivo, conheceu, historia, questoes_ordem, questao_atual, respostas):
         super().__init__(timeout=300)
         self.nome = nome
         self.motivo = motivo
         self.conheceu = conheceu
         self.historia = historia
+        self.questoes_ordem = questoes_ordem
         self.questao_atual = questao_atual
         self.respostas = respostas
         
@@ -240,7 +265,7 @@ class QuestaoView(discord.ui.View):
         }
         
         # Configurar botões baseado na questão atual
-        questao = self.questoes[questao_atual]
+        questao = self.questoes[self.questoes_ordem[self.questao_atual]]
         
         # Truncar labels para máximo de 45 caracteres
         label_a = f"A - {questao['a']}"
@@ -262,9 +287,9 @@ class QuestaoView(discord.ui.View):
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         button_id = interaction.data['custom_id']
-        self.respostas[self.questao_atual] = button_id
+        self.respostas[self.questoes_ordem[self.questao_atual]] = button_id
         
-        if self.questao_atual == 12:
+        if self.questao_atual == 7:  # Última questão (índice 7 de 8 questões)
             await self.finalizar(interaction)
         else:
             await self.proxima_questao(interaction)
@@ -273,19 +298,31 @@ class QuestaoView(discord.ui.View):
     
     async def proxima_questao(self, interaction):
         proxima = self.questao_atual + 1
-        questao = self.questoes[proxima]
+        questao_id = self.questoes_ordem[proxima]
+        questao_data = self.questoes[questao_id]
         
-        view = QuestaoView(self.nome, self.motivo, self.conheceu, self.historia, proxima, self.respostas)
+        view = QuestaoView(self.nome, self.motivo, self.conheceu, self.historia, self.questoes_ordem, proxima, self.respostas)
         embed = discord.Embed(
-            title=f"Questão {proxima}/12 - OBRIGATÓRIA",
-            description=questao["titulo"],
+            title=f"Questão {proxima + 1}/8 - OBRIGATÓRIA",
+            description=questao_data["titulo"],
             color=0xff0000
         )
         
         await interaction.response.edit_message(embed=embed, view=view)
     
     async def finalizar(self, interaction):
-        # Verificar respostas obrigatórias
+        # Verificar se todas as questões foram respondidas
+        questoes_respondidas = len(self.respostas)
+        if questoes_respondidas != 8:
+            embed = discord.Embed(
+                title="❌ ERRO",
+                description=f"Apenas {questoes_respondidas}/8 questões foram respondidas. Tente novamente.",
+                color=0xff0000
+            )
+            await interaction.response.edit_message(embed=embed, view=None)
+            return
+        
+        # Verificar respostas obrigatórias (todas as questões de 5 a 12)
         corretas = 0
         for q in range(5, 13):
             if self.respostas.get(q) == RESPOSTAS_CORRETAS[q]:
@@ -325,7 +362,7 @@ class QuestaoView(discord.ui.View):
         else:
             embed = discord.Embed(
                 title="❌ REPROVADO",
-                description=f"Você foi reprovado na whitelist.\n\nAcertou {corretas}/8 questões obrigatórias.\nÉ necessário acertar todas as questões de 5 a 12.",
+                description=f"Você foi reprovado na whitelist.\n\nAcertou {corretas}/8 questões obrigatórias.\nÉ necessário acertar todas as questões para ser aprovado.",
                 color=0xff0000
             )
         
@@ -379,6 +416,8 @@ class QuestaoView(discord.ui.View):
             )
             
             # Mostrar respostas das questões obrigatórias
+            # Nota: Questões são apresentadas ao usuário em ordem aleatória,
+            # mas exibidas aqui na ordem original (5-12) para facilitar análise
             questoes_texto = ""
             for q in range(5, 13):
                 resposta = self.respostas.get(q, 'Não respondida')
