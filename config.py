@@ -23,11 +23,11 @@ RESPOSTAS_CORRETAS = {
     5: 'b',   # RDM - Random Deathmatch
     6: 'a',   # VDM - Vehicle Deathmatch  
     7: 'c',   # Dark RP
-    8: 'b',   # Safe Zone
+    8: 'a',   # Safe Zone - Locais onde crimes são proibidos
     9: 'b',   # Powergaming
     10: 'a',  # Amor à Vida
     11: 'c',  # Assalto
-    12: 'b'   # Microfone
+    12: 'a'   # Microfone - SIM (necessário para RP)
 }
 
 # Configurações do banco de dados

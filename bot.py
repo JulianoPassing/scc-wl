@@ -191,45 +191,45 @@ class QuestaoView(discord.ui.View):
         self.questoes = {
             5: {
                 "titulo": "O que é Random Deathmatch (RDM)?",
-                "a": "É quando um jogador decide iniciar um combate e matar outro jogador, mas apenas depois de ter um motivo justo e uma longa interação de roleplay que justifique o conflito.",
-                "b": "É o ato de um jogador matar outro (ou vários outros) de forma aleatória, sem qualquer motivo, história ou interação prévia que justifique a ação. É uma quebra grave da imersão no roleplay.",
-                "c": "Refere-se a um evento oficial do servidor onde os jogadores são autorizados a lutar entre si em uma área designada para determinar o campeão do 'mata-mata'."
+                "a": "Matar após RP com motivo válido",
+                "b": "Matar aleatoriamente sem motivo",
+                "c": "Evento oficial de mata-mata"
             },
             6: {
                 "titulo": "O que é VDM ou Vehicle Deathmatch?",
-                "a": "É usar o veículo como uma arma para atropelar e matar outros jogadores de propósito e sem um motivo de RP.",
-                "b": "É usar o veículo para fugir da polícia em alta velocidade.",
-                "c": "É participar em corridas de rua organizadas por outros jogadores."
+                "a": "Usar veículo para matar sem motivo RP",
+                "b": "Fugir da polícia em alta velocidade",
+                "c": "Participar de corridas de rua"
             },
             7: {
                 "titulo": "O que é Dark RP?",
-                "a": "É um modo de jogo onde se interpreta apenas personagens policiais ou de forças especiais.",
-                "b": "É um estilo de RP focado em realizar atividades criminosas apenas durante a noite no jogo.",
-                "c": "É a prática de roleplay com temas pesados como tortura, assédio ou preconceito, geralmente proibidos nos servidores."
+                "a": "Interpretar apenas personagens policiais",
+                "b": "Atividades criminosas apenas à noite",
+                "c": "RP com temas pesados proibidos"
             },
             8: {
                 "titulo": "O que é Safe Zone (Área Segura)?",
-                "a": "São áreas designadas no mapa, como hospitais e praças, onde é proibido cometer crimes, agressões ou sequestros.",
-                "b": "É qualquer local onde o jogador pode esconder seu dinheiro e itens ilegais.",
-                "c": "É uma área onde apenas jogadores com permissão de administrador podem entrar."
+                "a": "Locais onde crimes são proibidos",
+                "b": "Local para esconder itens ilegais",
+                "c": "Área só para administradores"
             },
             9: {
                 "titulo": "O que é Powergaming?",
-                "a": "É usar o seu conhecimento de mecânicas do jogo para ter o máximo de dinheiro e as melhores armas.",
-                "b": "É abusar de mecânicas do jogo ou forçar ações que seu personagem não seria capaz de fazer, para obter vantagens e 'vencer' no RP.",
-                "c": "É interpretar um personagem que é fisicamente muito forte, como um lutador ou um guarda-costas."
+                "a": "Usar conhecimento para ter vantagens",
+                "b": "Abusar de mecânicas para vencer",
+                "c": "Interpretar personagem muito forte"
             },
             10: {
                 "titulo": "O que é Amor à Vida?",
-                "a": "É agir de forma que valorize a vida do seu personagem, evitando se colocar em perigo desnecessário e reagindo ao medo.",
-                "b": "É a regra que proíbe namorar outros personagens dentro do jogo.",
-                "c": "É a obrigação de sempre chamar uma ambulância quando outro jogador se machuca."
+                "a": "Valorizar a vida evitando perigos",
+                "b": "Regra que proíbe namoro no jogo",
+                "c": "Obrigação de chamar ambulância"
             },
             11: {
                 "titulo": "Em qual situação você assaltaria uma pessoa?",
-                "a": "A partir das 22 horas.",
-                "b": "Das 00 às 5 horas.",
-                "c": "Não é permitido assalto."
+                "a": "A partir das 22 horas",
+                "b": "Das 00 às 5 horas",
+                "c": "Não é permitido assalto"
             },
             12: {
                 "titulo": "Você tem MICROFONE?",
@@ -242,11 +242,23 @@ class QuestaoView(discord.ui.View):
         # Configurar botões baseado na questão atual
         questao = self.questoes[questao_atual]
         
-        self.add_item(discord.ui.Button(label=f"A - {questao['a']}", style=discord.ButtonStyle.primary, custom_id="a"))
-        self.add_item(discord.ui.Button(label=f"B - {questao['b']}", style=discord.ButtonStyle.primary, custom_id="b"))
+        # Truncar labels para máximo de 45 caracteres
+        label_a = f"A - {questao['a']}"
+        label_b = f"B - {questao['b']}"
+        
+        if len(label_a) > 45:
+            label_a = label_a[:42] + "..."
+        if len(label_b) > 45:
+            label_b = label_b[:42] + "..."
+        
+        self.add_item(discord.ui.Button(label=label_a, style=discord.ButtonStyle.primary, custom_id="a"))
+        self.add_item(discord.ui.Button(label=label_b, style=discord.ButtonStyle.primary, custom_id="b"))
         
         if questao['c']:
-            self.add_item(discord.ui.Button(label=f"C - {questao['c']}", style=discord.ButtonStyle.primary, custom_id="c"))
+            label_c = f"C - {questao['c']}"
+            if len(label_c) > 45:
+                label_c = label_c[:42] + "..."
+            self.add_item(discord.ui.Button(label=label_c, style=discord.ButtonStyle.primary, custom_id="c"))
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         button_id = interaction.data['custom_id']
