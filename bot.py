@@ -89,14 +89,14 @@ class WhitelistModal(discord.ui.Modal):
         super().__init__(title="Whitelist Street Car Club - Parte 1")
         
         self.nome = discord.ui.TextInput(
-            label="1. Qual seu nome e sobrenome completo?",
+            label="1. Seu nome e sobrenome completo?",
             placeholder="Por extenso...",
             required=True,
             max_length=100
         )
         
         self.motivo = discord.ui.TextInput(
-            label="2. Por que você quer jogar no Street Car Club?",
+            label="2. Por que quer jogar no Street Car Club?",
             placeholder="Por extenso...",
             required=True,
             max_length=500,
