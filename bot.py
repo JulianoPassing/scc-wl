@@ -199,8 +199,9 @@ class HistoriaModal(discord.ui.Modal):
 
 class QuestaoView(discord.ui.View):
     """
-    Sistema de questões com ordem aleatória para evitar cópia.
-    As questões são embaralhadas no início e apresentadas uma por vez.
+    Sistema de questões com dupla randomização para evitar cópia:
+    1. Ordem das questões é embaralhada no início
+    2. Opções A, B, C são embaralhadas para cada questão
     """
     def __init__(self, nome, motivo, conheceu, historia, questoes_ordem, questao_atual, respostas):
         super().__init__(timeout=300)
@@ -265,29 +266,56 @@ class QuestaoView(discord.ui.View):
         }
         
         # Configurar botões baseado na questão atual
-        questao = self.questoes[self.questoes_ordem[self.questao_atual]]
+        questao_id = self.questoes_ordem[self.questao_atual]
+        questao = self.questoes[questao_id]
         
-        # Truncar labels para máximo de 45 caracteres
-        label_a = f"A - {questao['a']}"
-        label_b = f"B - {questao['b']}"
-        
-        if len(label_a) > 45:
-            label_a = label_a[:42] + "..."
-        if len(label_b) > 45:
-            label_b = label_b[:42] + "..."
-        
-        self.add_item(discord.ui.Button(label=label_a, style=discord.ButtonStyle.primary, custom_id="a"))
-        self.add_item(discord.ui.Button(label=label_b, style=discord.ButtonStyle.primary, custom_id="b"))
-        
+        # Criar lista de opções com suas letras originais
+        opcoes = []
+        if questao['a']:
+            opcoes.append(('a', questao['a']))
+        if questao['b']:
+            opcoes.append(('b', questao['b']))
         if questao['c']:
-            label_c = f"C - {questao['c']}"
-            if len(label_c) > 45:
-                label_c = label_c[:42] + "..."
-            self.add_item(discord.ui.Button(label=label_c, style=discord.ButtonStyle.primary, custom_id="c"))
+            opcoes.append(('c', questao['c']))
+        
+        # Embaralhar as opções
+        random.shuffle(opcoes)
+        
+        # Mapear as opções embaralhadas para os botões
+        self.mapeamento_opcoes = {}  # Mapear botão clicado para resposta original
+        botoes_labels = ['A', 'B', 'C']
+        
+        for i, (letra_original, texto) in enumerate(opcoes):
+            if i < len(botoes_labels):
+                botao_label = botoes_labels[i]
+                self.mapeamento_opcoes[botao_label.lower()] = letra_original
+                
+                # Truncar labels para máximo de 45 caracteres
+                label_completo = f"{botao_label} - {texto}"
+                if len(label_completo) > 45:
+                    label_completo = label_completo[:42] + "..."
+                
+                self.add_item(discord.ui.Button(
+                    label=label_completo, 
+                    style=discord.ButtonStyle.primary, 
+                    custom_id=botao_label.lower()
+                ))
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         button_id = interaction.data['custom_id']
-        self.respostas[self.questoes_ordem[self.questao_atual]] = button_id
+        resposta_original = self.mapeamento_opcoes.get(button_id)
+        
+        # Validação de segurança
+        if resposta_original is None:
+            embed = discord.Embed(
+                title="❌ ERRO INTERNO",
+                description="Ocorreu um erro ao processar sua resposta. Tente novamente.",
+                color=0xff0000
+            )
+            await interaction.response.edit_message(embed=embed, view=None)
+            return False
+        
+        self.respostas[self.questoes_ordem[self.questao_atual]] = resposta_original
         
         if self.questao_atual == 7:  # Última questão (índice 7 de 8 questões)
             await self.finalizar(interaction)
@@ -301,6 +329,7 @@ class QuestaoView(discord.ui.View):
         questao_id = self.questoes_ordem[proxima]
         questao_data = self.questoes[questao_id]
         
+        # Criar nova instância com opções embaralhadas
         view = QuestaoView(self.nome, self.motivo, self.conheceu, self.historia, self.questoes_ordem, proxima, self.respostas)
         embed = discord.Embed(
             title=f"Questão {proxima + 1}/8 - OBRIGATÓRIA",
@@ -418,6 +447,8 @@ class QuestaoView(discord.ui.View):
             # Mostrar respostas das questões obrigatórias
             # Nota: Questões são apresentadas ao usuário em ordem aleatória,
             # mas exibidas aqui na ordem original (5-12) para facilitar análise
+            # As opções A, B, C também são embaralhadas para cada questão
+            # mas as respostas são mapeadas de volta para as letras originais
             questoes_texto = ""
             for q in range(5, 13):
                 resposta = self.respostas.get(q, 'Não respondida')
